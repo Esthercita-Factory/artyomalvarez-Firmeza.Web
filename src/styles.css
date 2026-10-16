@@ -1,0 +1,358 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    color: #2C2A29;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* Institutional fine borders & base classes */
+.institutional-border {
+  border: 1px solid #DEDCD8;
+}
+
+.border-b-institutional {
+  border-bottom: 1px solid #DEDCD8;
+}
+
+.border-t-institutional {
+  border-top: 1px solid #DEDCD8;
+}
+
+.border-r-institutional {
+  border-right: 1px solid #DEDCD8;
+}
+
+.text-carbon {
+  color: #2C2A29;
+}
+
+.bg-carbon {
+  background-color: #2C2A29;
+}
+
+.text-secondary-label {
+  color: #6B6866;
+}
+
+.bg-warm-canvas {
+  background-color: #FEF8F5;
+}
+
+.bg-warm-surface {
+  background-color: #F4F4F2;
+}
+
+.btn-primary-yellow {
+  background-color: #FDDA24;
+  color: #2C2A29;
+  font-weight: 600;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 150ms ease-in-out;
+}
+
+.btn-primary-yellow:hover {
+  background-color: #ECC915;
+}
+
+.btn-primary-yellow:active {
+  background-color: #D9B704;
+}
+
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #FFFFFF;
+  border: 1px solid #DEDCD8;
+  color: #2C2A29;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: background-color 150ms ease-in-out, border-color 150ms ease-in-out;
+}
+
+.btn-outline:hover {
+  background-color: #F4F4F2;
+  border-color: #CFC8BB;
+}
+
+.field {
+  height: 2.5rem;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  background-color: #FFFFFF;
+  border: 1px solid #DEDCD8;
+  border-radius: 0.5rem;
+  color: #2C2A29;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  transition: border-color 150ms ease-in-out;
+}
+
+.field:focus {
+  outline: none;
+  border-color: #2C2A29;
+}
+
+.nav-admin {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 150ms ease-in-out;
+}
+
+.tab-active {
+  background-color: #383533;
+  color: #FFFFFF;
+  border-left: 3px solid #FDDA24;
+}
+
+.tab-inactive {
+  color: #BDBAB7;
+}
+
+.tab-inactive:hover {
+  background-color: #383533;
+  color: #FFFFFF;
+}
+
+.nav-route {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: monospace;
+  font-size: 0.875rem;
+  padding: 0.25rem 0.625rem;
+  background-color: #F4F4F2;
+  border: 1px solid #DEDCD8;
+  border-radius: 0.25rem;
+  color: #2C2A29;
+}
+
+/* Status Badges */
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  line-height: 1rem;
+}
+
+.status-disponible {
+  background-color: #E8F5E9;
+  color: #1E7B3A;
+  border: 1px solid #A5D6A7;
+}
+
+.status-alerta {
+  background-color: #FFF8E1;
+  color: #B45F06;
+  border: 1px solid #FFE082;
+}
+
+.status-agotado {
+  background-color: #FFEBEE;
+  color: #B3261E;
+  border: 1px solid #FFCDD2;
+}
+
+.status-neutral {
+  background-color: #F4F4F2;
+  color: #6B6866;
+  border: 1px solid #DEDCD8;
+}
+
+.status-activo {
+  background-color: #E3F2FD;
+  color: #0B5CAD;
+  border: 1px solid #BBDEFB;
+}
+
+/* Portal classes */
+.nav-link {
+  color: #CFC8BB;
+  text-decoration: none;
+  padding: 0.5rem 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: color 150ms ease-in-out;
+}
+
+.nav-link:hover {
+  color: #FFFFFF;
+}
+
+.nav-link.active-nav {
+  color: #FFFFFF;
+  border-bottom: 2px solid #FDDA24;
+}
+
+/* Skeleton animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, #F4F4F2 25%, #EBEBEA 50%, #F4F4F2 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Legacy container */
+.legacy {
+  min-height: 100%;
+}
+
+.legacy h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2C2A29;
+  margin-bottom: 0.75rem;
+}
+
+.legacy h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2C2A29;
+  margin-bottom: 0.5rem;
+}
+
+.legacy table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.legacy th {
+  padding: 0.75rem 1rem;
+  background-color: #F4F4F2;
+  border-bottom: 1px solid #DEDCD8;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #2C2A29;
+}
+
+.legacy td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid #DEDCD8;
+  font-size: 0.875rem;
+  color: #2C2A29;
+}
+
+.legacy input[type="text"],
+.legacy input[type="email"],
+.legacy input[type="date"],
+.legacy input[type="number"],
+.legacy select {
+  height: 2.5rem;
+  padding: 0 0.75rem;
+  border: 1px solid #DEDCD8;
+  border-radius: 0.375rem;
+  background-color: #FFFFFF;
+  font-size: 0.875rem;
+  color: #2C2A29;
+}
+
+.legacy label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #2C2A29;
+}
+
+.legacy .card {
+  background-color: #FFFFFF;
+  border: 1px solid #DEDCD8;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+}
+
+.legacy .muted {
+  color: #615E5C;
+}
+
+.legacy .badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.legacy .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid #DEDCD8;
+  background-color: #FFFFFF;
+  color: #2C2A29;
+}
+
+.legacy .btn.primary {
+  background-color: #FDDA24;
+  border-color: #FDDA24;
+  color: #2C2A29;
+}
+
+.legacy .row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.legacy .state {
+  padding: 2.5rem 1rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.legacy .state.err {
+  background-color: #FFF8F8;
+  color: #B3261E;
+}
+
+.legacy .spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid #DEDCD8;
+  border-top-color: #FDDA24;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
