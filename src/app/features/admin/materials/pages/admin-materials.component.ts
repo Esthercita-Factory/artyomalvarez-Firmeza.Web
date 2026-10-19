@@ -8,7 +8,7 @@ import { Product, ProductInput } from '@models/models';
 import { ApiService } from '@services/api.service';
 import { categoryOf, cop } from '@utils/catalog';
 import { stockBadge } from '@utils/admin';
-import { createLoader, errMsg } from '@utils/util';
+import { createLoader, errMsg, saveBlob } from '@utils/util';
 
 @Component({
   selector: 'app-admin-materials',
@@ -27,14 +27,31 @@ import { createLoader, errMsg } from '@utils/util';
         [title]="'Gestión de Materiales'"
         [subtitle]="'Control de existencias, referencias técnicas y catálogo comercial'"
       >
-        <button
-          type="button"
-          (click)="openCreateModal()"
-          class="h-11 px-5 btn-primary-yellow font-semibold flex items-center justify-center gap-2"
-        >
-          <span class="material-symbols-outlined text-[20px]">add</span>
-          <span>+ Nuevo material</span>
-        </button>
+        <div class="flex items-center gap-3">
+          <button
+            type="button"
+            [disabled]="exportingPdf()"
+            (click)="onExportPdf()"
+            class="h-11 px-4 institutional-border rounded-xl font-label-md text-label-md text-carbon hover:bg-warm-surface flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+            title="Descargar catálogo en PDF"
+          >
+            @if (exportingPdf()) {
+              <div class="w-4 h-4 border-2 border-carbon border-t-transparent rounded-full animate-spin"></div>
+              <span>Generando PDF...</span>
+            } @else {
+              <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+              <span>Exportar PDF</span>
+            }
+          </button>
+          <button
+            type="button"
+            (click)="openCreateModal()"
+            class="h-11 px-5 btn-primary-yellow font-semibold flex items-center justify-center gap-2"
+          >
+            <span class="material-symbols-outlined text-[20px]">add</span>
+            <span>+ Nuevo material</span>
+          </button>
+        </div>
       </app-page-header>
 
       <app-alert [text]="pageAlert()" />
@@ -320,6 +337,7 @@ export class AdminMaterialsComponent {
   selectedStatus = 'ALL';
 
   readonly pageAlert = signal<string | null>(null);
+  readonly exportingPdf = signal<boolean>(false);
 
   // Modal State
   readonly showModal = signal<boolean>(false);
@@ -478,6 +496,22 @@ export class AdminMaterialsComponent {
         } else {
           this.pageAlert.set(errMsg(err));
         }
+      }
+    });
+  }
+
+  onExportPdf(): void {
+    this.exportingPdf.set(true);
+    this.pageAlert.set(null);
+
+    this.api.downloadProductsPdf().subscribe({
+      next: (blob) => {
+        this.exportingPdf.set(false);
+        saveBlob(blob, `Catalogo-Materiales-Firmeza-${new Date().toISOString().slice(0, 10)}.pdf`);
+      },
+      error: (err) => {
+        this.exportingPdf.set(false);
+        this.pageAlert.set(errMsg(err));
       }
     });
   }

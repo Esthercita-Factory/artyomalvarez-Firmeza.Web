@@ -367,6 +367,7 @@ export class RentalsComponent implements OnInit {
   }
 
   onSubmitRental(): void {
+    if (this.submitting()) return;
     if (!this.isFormValid()) {
       this.formError.set('Por favor complete todos los datos requeridos.');
       return;

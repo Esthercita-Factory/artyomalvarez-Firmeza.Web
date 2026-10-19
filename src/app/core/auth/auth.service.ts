@@ -17,14 +17,16 @@ export class AuthService {
 
   readonly token = signal<string | null>(this.getStoredToken());
 
-  private decodePayload(): Record<string, unknown> | null {
-    const t = this.token();
+  private decodePayload(rawToken?: string | null): Record<string, unknown> | null {
+    const t = rawToken !== undefined ? rawToken : this.token();
     if (!t) return null;
     try {
       const parts = t.split('.');
       if (parts.length < 2) return null;
       const base64Url = parts[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const pad = (4 - (base64.length % 4)) % 4;
+      base64 = base64.padEnd(base64.length + pad, '=');
       const jsonPayload = decodeURIComponent(
         atob(base64)
           .split('')
@@ -79,7 +81,24 @@ export class AuthService {
 
   private getStoredToken(): string | null {
     if (typeof localStorage === 'undefined') return null;
-    return localStorage.getItem(TOKEN_KEY);
+    const stored = localStorage.getItem(TOKEN_KEY);
+    if (!stored) return null;
+
+    const payload = this.decodePayload(stored);
+    if (!payload) {
+      localStorage.removeItem(TOKEN_KEY);
+      return null;
+    }
+
+    if (typeof payload['exp'] === 'number') {
+      const isExpired = Date.now() >= payload['exp'] * 1000;
+      if (isExpired) {
+        localStorage.removeItem(TOKEN_KEY);
+        return null;
+      }
+    }
+
+    return stored;
   }
 
   login(email: string, password: string): Observable<LoginResponse> {
@@ -95,6 +114,13 @@ export class AuthService {
           }
         })
       );
+  }
+
+  register(email: string, password: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.baseUrl}/Auth/register`, {
+      email,
+      password
+    });
   }
 
   clear(): void {

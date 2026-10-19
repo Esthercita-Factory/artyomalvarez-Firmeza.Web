@@ -18,8 +18,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(modifiedReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Si recibimos 401 y no proviene de la petición de login
-      if (error.status === 401 && !req.url.includes('/Auth/login')) {
+      // Si recibimos 401 en una petición que llevaba token y no proviene de login
+      if (error.status === 401 && token && !req.url.includes('/Auth/login')) {
         const isAdminPath =
           typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
         authService.logout(isAdminPath ? '/admin/login' : '/login');

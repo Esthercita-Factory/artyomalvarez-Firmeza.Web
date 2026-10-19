@@ -6,7 +6,7 @@ export const routes: Routes = [
   {
     path: 'admin/login',
     loadComponent: () =>
-      import('./pages/admin/admin-login.component').then((m) => m.AdminLoginComponent)
+      import('./features/auth/pages/admin-login.component').then((m) => m.AdminLoginComponent)
   },
 
   // Panel Administrativo protegido por adminGuard
@@ -14,7 +14,7 @@ export const routes: Routes = [
     path: 'admin',
     canActivate: [adminGuard],
     loadComponent: () =>
-      import('./layouts/admin-layout').then((m) => m.AdminLayoutComponent),
+      import('./layouts/admin-layout/admin-layout.component').then((m) => m.AdminLayoutComponent),
     children: [
       {
         path: '',
@@ -24,42 +24,42 @@ export const routes: Routes = [
       {
         path: 'dashboard',
         loadComponent: () =>
-          import('./pages/admin/admin-dashboard.component').then(
+          import('./features/admin/dashboard/pages/admin-dashboard.component').then(
             (m) => m.AdminDashboardComponent
           )
       },
       {
         path: 'materiales',
         loadComponent: () =>
-          import('./pages/admin/admin-materials.component').then(
+          import('./features/admin/materials/pages/admin-materials.component').then(
             (m) => m.AdminMaterialsComponent
           )
       },
       {
         path: 'flota',
         loadComponent: () =>
-          import('./pages/admin/admin-fleet.component').then(
+          import('./features/admin/fleet/pages/admin-fleet.component').then(
             (m) => m.AdminFleetComponent
           )
       },
       {
         path: 'clientes',
         loadComponent: () =>
-          import('./pages/admin/admin-customers.component').then(
+          import('./features/admin/customers/pages/admin-customers.component').then(
             (m) => m.AdminCustomersComponent
           )
       },
       {
         path: 'ventas',
         loadComponent: () =>
-          import('./pages/admin/admin-sales.component').then(
+          import('./features/admin/sales/pages/admin-sales.component').then(
             (m) => m.AdminSalesComponent
           )
       },
       {
         path: 'excel',
         loadComponent: () =>
-          import('./pages/admin/admin-excel.component').then(
+          import('./features/admin/excel/pages/admin-excel.component').then(
             (m) => m.AdminExcelComponent
           )
       }
@@ -70,18 +70,33 @@ export const routes: Routes = [
   {
     path: '',
     loadComponent: () =>
-      import('./layouts/public-layout').then((m) => m.PublicLayoutComponent),
+      import('./layouts/public-layout/public-layout.component').then((m) => m.PublicLayoutComponent),
     children: [
       // Rutas públicas de acceso y error
       {
         path: 'login',
         loadComponent: () =>
-          import('./pages/public/login.component').then((m) => m.LoginComponent)
+          import('./features/auth/pages/login.component').then((m) => m.LoginComponent)
+      },
+      {
+        path: 'ingreso',
+        redirectTo: 'login',
+        pathMatch: 'full'
+      },
+      {
+        path: 'register',
+        loadComponent: () =>
+          import('./features/auth/pages/register.component').then((m) => m.RegisterComponent)
+      },
+      {
+        path: 'registro',
+        redirectTo: 'register',
+        pathMatch: 'full'
       },
       {
         path: '403',
         loadComponent: () =>
-          import('./pages/public/error-page.component').then(
+          import('./features/public/pages/error-page.component').then(
             (m) => m.ErrorPageComponent
           ),
         data: { code: 403 }
@@ -89,7 +104,7 @@ export const routes: Routes = [
       {
         path: '404',
         loadComponent: () =>
-          import('./pages/public/error-page.component').then(
+          import('./features/public/pages/error-page.component').then(
             (m) => m.ErrorPageComponent
           ),
         data: { code: 404 }
@@ -97,7 +112,7 @@ export const routes: Routes = [
       {
         path: '500',
         loadComponent: () =>
-          import('./pages/public/error-page.component').then(
+          import('./features/public/pages/error-page.component').then(
             (m) => m.ErrorPageComponent
           ),
         data: { code: 500 }
@@ -116,35 +131,35 @@ export const routes: Routes = [
           {
             path: 'materiales',
             loadComponent: () =>
-              import('./pages/public/products.component').then(
+              import('./features/materials/pages/products.component').then(
                 (m) => m.ProductsComponent
               )
           },
           {
             path: 'flota',
             loadComponent: () =>
-              import('./pages/public/vehicles.component').then(
+              import('./features/fleet/pages/vehicles.component').then(
                 (m) => m.VehiclesComponent
               )
           },
           {
             path: 'cotizaciones',
             loadComponent: () =>
-              import('./pages/public/rentals.component').then(
+              import('./features/fleet/pages/rentals.component').then(
                 (m) => m.RentalsComponent
               )
           },
           {
             path: 'proyectos',
             loadComponent: () =>
-              import('./pages/public/soon.component').then(
+              import('./features/public/pages/soon.component').then(
                 (m) => m.SoonComponent
               )
           },
           {
             path: 'carrito',
             loadComponent: () =>
-              import('./pages/public/cart.component').then(
+              import('./features/cart/pages/cart.component').then(
                 (m) => m.CartComponent
               )
           }

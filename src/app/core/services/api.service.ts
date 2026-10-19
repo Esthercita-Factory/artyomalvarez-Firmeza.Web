@@ -95,6 +95,18 @@ export class ApiService {
     });
   }
 
+  downloadProductsPdf(): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/Products/export-pdf`, {
+      responseType: 'blob'
+    });
+  }
+
+  downloadCustomersPdf(): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/Customers/export-pdf`, {
+      responseType: 'blob'
+    });
+  }
+
   // --- Alquileres / Cotizaciones ---
   getRentals(): Observable<Rental[]> {
     return this.list<Rental>('Rentals');

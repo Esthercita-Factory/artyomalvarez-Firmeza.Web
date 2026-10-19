@@ -17,20 +17,37 @@ import { createLoader, errMsg, saveBlob } from '@utils/util';
         [title]="'Directorio de Clientes'"
         [subtitle]="'Base de datos corporativa de contratistas, constructoras y compradores registrados'"
       >
-        <button
-          type="button"
-          [disabled]="exporting()"
-          (click)="onExportCustomers()"
-          class="h-11 px-5 btn-primary-yellow font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
-        >
-          @if (exporting()) {
-            <div class="w-4 h-4 border-2 border-carbon border-t-transparent rounded-full animate-spin"></div>
-            <span>Generando Excel...</span>
-          } @else {
-            <span class="material-symbols-outlined text-[20px]">file_download</span>
-            <span>Exportar directorio</span>
-          }
-        </button>
+        <div class="flex items-center gap-3">
+          <button
+            type="button"
+            [disabled]="exportingPdf()"
+            (click)="onExportPdfCustomers()"
+            class="h-11 px-4 institutional-border rounded-xl font-label-md text-label-md text-carbon hover:bg-warm-surface flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+            title="Descargar directorio en PDF"
+          >
+            @if (exportingPdf()) {
+              <div class="w-4 h-4 border-2 border-carbon border-t-transparent rounded-full animate-spin"></div>
+              <span>Generando PDF...</span>
+            } @else {
+              <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+              <span>Exportar PDF</span>
+            }
+          </button>
+          <button
+            type="button"
+            [disabled]="exporting()"
+            (click)="onExportCustomers()"
+            class="h-11 px-5 btn-primary-yellow font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            @if (exporting()) {
+              <div class="w-4 h-4 border-2 border-carbon border-t-transparent rounded-full animate-spin"></div>
+              <span>Generando Excel...</span>
+            } @else {
+              <span class="material-symbols-outlined text-[20px]">file_download</span>
+              <span>Exportar Excel</span>
+            }
+          </button>
+        </div>
       </app-page-header>
 
       <app-alert [text]="pageAlert()" />
@@ -120,6 +137,7 @@ export class AdminCustomersComponent {
   searchQuery = '';
   readonly pageAlert = signal<string | null>(null);
   readonly exporting = signal<boolean>(false);
+  readonly exportingPdf = signal<boolean>(false);
 
   readonly filteredCustomers = computed(() => {
     let list = this.loader.data();
@@ -151,6 +169,23 @@ export class AdminCustomersComponent {
       error: (err) => {
         this.exporting.set(false);
         this.pageAlert.set(`Error al exportar clientes: ${errMsg(err)}`);
+      }
+    });
+  }
+
+  onExportPdfCustomers(): void {
+    this.exportingPdf.set(true);
+    this.pageAlert.set(null);
+
+    this.api.downloadCustomersPdf().subscribe({
+      next: (blob) => {
+        this.exportingPdf.set(false);
+        saveBlob(blob, `Directorio-Clientes-Firmeza-${new Date().toISOString().slice(0, 10)}.pdf`);
+        this.pageAlert.set('Directorio de clientes en PDF exportado con éxito.');
+      },
+      error: (err) => {
+        this.exportingPdf.set(false);
+        this.pageAlert.set(`Error al exportar clientes en PDF: ${errMsg(err)}`);
       }
     });
   }

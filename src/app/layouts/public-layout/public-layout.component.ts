@@ -1,9 +1,9 @@
 import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { PublicFooterComponent } from '@components/public-footer.component';
-import { PublicHeaderComponent } from '@components/public-header.component';
-import { AuthService } from '@services/auth.service';
-import { CartService } from '@services/cart.service';
+import { PublicFooterComponent } from './public-footer.component';
+import { PublicHeaderComponent } from './public-header.component';
+import { AuthService } from '@core/auth/auth.service';
+import { CartService } from '@features/cart/services/cart.service';
 
 @Component({
   selector: 'app-public-layout',

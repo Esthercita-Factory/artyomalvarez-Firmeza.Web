@@ -16,12 +16,16 @@
     "ignoreDeprecations": "6.0",
     "baseUrl": "./",
     "paths": {
-      "@models/*": ["./src/app/models/*"],
-      "@services/*": ["./src/app/services/*"],
-      "@components/*": ["./src/app/components/*"],
-      "@utils/*": ["./src/app/utils/*"],
-      "@guards/*": ["./src/app/guards/*"],
-      "@interceptors/*": ["./src/app/interceptors/*"],
+      "@core/*": ["./src/app/core/*"],
+      "@shared/*": ["./src/app/shared/*"],
+      "@layouts/*": ["./src/app/layouts/*"],
+      "@features/*": ["./src/app/features/*"],
+      "@models/*": ["./src/app/shared/models/*"],
+      "@services/*": ["./src/app/core/services/*", "./src/app/core/auth/*", "./src/app/features/cart/services/*"],
+      "@components/*": ["./src/app/shared/components/*", "./src/app/layouts/*", "./src/app/features/materials/components/*"],
+      "@utils/*": ["./src/app/shared/utils/*"],
+      "@guards/*": ["./src/app/core/guards/*"],
+      "@interceptors/*": ["./src/app/core/interceptors/*"],
       "@env/*": ["./src/environments/*"]
     }
   },

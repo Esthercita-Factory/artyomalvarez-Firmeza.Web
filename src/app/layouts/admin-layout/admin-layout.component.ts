@@ -1,9 +1,9 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs/operators';
-import { AdminSidebarComponent } from '@components/admin-sidebar.component';
-import { AdminTopbarComponent } from '@components/admin-topbar.component';
-import { AuthService } from '@services/auth.service';
+import { AdminSidebarComponent } from './admin-sidebar.component';
+import { AdminTopbarComponent } from './admin-topbar.component';
+import { AuthService } from '@core/auth/auth.service';
 
 const TITLES: Record<string, string> = {
   dashboard: 'Dashboard General',
