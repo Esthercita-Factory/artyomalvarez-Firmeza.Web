@@ -3,15 +3,31 @@ export interface Product {
   sku: string;
   name: string;
   brand: string;
+  category?: string;
+  description?: string;
   unitPrice: number;
   stock: number;
   minimumStock: number;
+  isActive?: boolean;
+  isLowStock?: boolean;
+  status?: string;
+}
+
+export interface ProductFilterParams {
+  search?: string;
+  category?: string;
+  status?: string;
+  lowStock?: boolean;
+  onlyActive?: boolean;
+  page?: number;
+  pageSize?: number;
 }
 
 export interface ProductInput {
   sku: string;
   name: string;
   brand: string;
+  category?: string;
   unitPrice: number;
   stock: number;
   minimumStock: number;
@@ -109,7 +125,16 @@ export interface RentalQuote {
   total: number;
 }
 
-export type DashboardMetrics = Record<string, unknown>;
+export interface DashboardMetrics {
+  totalSalesRevenue?: number;
+  totalSalesCount?: number;
+  totalRentalsRevenue?: number;
+  activeRentalsCount?: number;
+  totalCustomersCount?: number;
+  lowStockProductsCount?: number;
+  availableVehiclesCount?: number;
+  [k: string]: unknown;
+}
 
 export interface ImportResult {
   processed?: number;

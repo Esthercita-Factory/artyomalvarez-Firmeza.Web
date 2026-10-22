@@ -1,4 +1,5 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, inject, input, output } from '@angular/core';
+import { AdminStateService } from '@core/services/admin-state.service';
 
 @Component({
   selector: 'app-admin-topbar',
@@ -6,15 +7,21 @@ import { Component, computed, input, output } from '@angular/core';
   template: `
     <header class="h-16 bg-white border-b-institutional px-4 md:px-8 flex items-center justify-between sticky top-0 z-10">
       <div class="flex items-center gap-3">
-        <div class="flex items-center gap-2 font-mono text-label-sm px-2.5 py-1 bg-warm-surface institutional-border rounded text-carbon">
-          <span class="text-secondary-label">Ruta:</span>
-          <span class="font-semibold text-carbon">{{ url() }}</span>
-        </div>
-        <span class="hidden sm:inline-block h-4 w-[1px] bg-[#DEDCD8]"></span>
-        <span class="font-headline-sm text-headline-sm text-carbon font-semibold truncate max-w-[200px] sm:max-w-none">
+        <!-- Mobile Drawer Hamburger Toggle Button -->
+        <button
+          type="button"
+          (click)="adminState.toggleMobile()"
+          class="md:hidden p-2 rounded-lg text-carbon hover:bg-warm-surface institutional-border flex items-center justify-center focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+          aria-label="Abrir menú de navegación móvil"
+        >
+          <span class="material-symbols-outlined text-[22px]">menu</span>
+        </button>
+
+        <span class="font-headline-sm text-headline-sm text-carbon font-semibold truncate max-w-[220px] sm:max-w-none">
           {{ title() }}
         </span>
-        <span class="hidden lg:inline-flex items-center gap-1.5 font-label-sm text-label-sm text-[#1E7B3A]">
+        <span class="hidden sm:inline-block h-4 w-[1px] bg-[#DEDCD8]"></span>
+        <span class="hidden sm:inline-flex items-center gap-1.5 font-label-sm text-label-sm text-[#1E7B3A]">
           <span class="w-2 h-2 rounded-full bg-[#1E7B3A]"></span>
           <span>Sistema Conectado</span>
         </span>
@@ -51,7 +58,9 @@ import { Component, computed, input, output } from '@angular/core';
   `
 })
 export class AdminTopbarComponent {
-  readonly url = input.required<string>();
+  readonly adminState = inject(AdminStateService);
+
+  readonly url = input<string>('');
   readonly title = input.required<string>();
   readonly email = input<string | null | undefined>(null);
   readonly role = input<string | string[] | null | undefined>(null);

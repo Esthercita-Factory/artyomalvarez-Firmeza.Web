@@ -60,7 +60,8 @@ import { createLoader, errMsg, saveBlob } from '@utils/util';
           </span>
           <input
             type="text"
-            [(ngModel)]="searchQuery"
+            [ngModel]="searchQuery()"
+            (ngModelChange)="searchQuery.set($event)"
             placeholder="Buscar por documento, nombre o correo..."
             class="w-full h-10 pl-9 pr-3 bg-white institutional-border rounded-xl text-carbon text-body-sm focus:border-carbon focus:outline-none"
           />
@@ -86,9 +87,9 @@ import { createLoader, errMsg, saveBlob } from '@utils/util';
           [emptyIcon]="'group_off'"
           [emptyTitle]="'Sin clientes registrados'"
           [emptyText]="'No se encontraron clientes que coincidan con la búsqueda.'"
-          [resettable]="searchQuery !== ''"
+          [resettable]="searchQuery() !== ''"
           (retry)="loader.reload()"
-          (reset)="searchQuery = ''"
+          (reset)="searchQuery.set('')"
         >
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
@@ -134,23 +135,23 @@ export class AdminCustomersComponent {
 
   readonly loader = createLoader<Customer[]>(() => this.api.getCustomers(), []);
 
-  searchQuery = '';
+  readonly searchQuery = signal<string>('');
   readonly pageAlert = signal<string | null>(null);
   readonly exporting = signal<boolean>(false);
   readonly exportingPdf = signal<boolean>(false);
 
   readonly filteredCustomers = computed(() => {
     let list = this.loader.data();
-    const query = this.searchQuery.trim().toLowerCase();
+    const query = this.searchQuery().trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
     if (query) {
-      list = list.filter(
-        (c) =>
-          c.documentNumber.toLowerCase().includes(query) ||
-          c.firstName.toLowerCase().includes(query) ||
-          c.lastName.toLowerCase().includes(query) ||
-          c.email.toLowerCase().includes(query)
-      );
+      list = list.filter((c) => {
+        const doc = (c.documentNumber || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const fn = (c.firstName || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const ln = (c.lastName || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const em = (c.email || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        return doc.includes(query) || fn.includes(query) || ln.includes(query) || em.includes(query);
+      });
     }
 
     return list;

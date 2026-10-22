@@ -8,10 +8,13 @@ import { AuthService } from '@core/auth/auth.service';
 const TITLES: Record<string, string> = {
   dashboard: 'Dashboard General',
   materiales: 'Gestión de Materiales',
+  'alertas-stock': 'Alertas de Stock Mínimo',
   flota: 'Flota y Maquinaria Pesada',
   clientes: 'Directorio de Clientes',
   ventas: 'Registro de Ventas',
-  excel: 'Operaciones Masivas en Hoja de Cálculo'
+  alquileres: 'Contratos y Alquileres de Flota',
+  excel: 'Operaciones Masivas en Hoja de Cálculo',
+  sistema: 'Configuración y Diagnóstico del Sistema'
 };
 
 @Component({

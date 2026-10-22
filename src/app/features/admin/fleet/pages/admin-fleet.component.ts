@@ -47,14 +47,16 @@ import { createLoader, errMsg } from '@utils/util';
             </span>
             <input
               type="text"
-              [(ngModel)]="searchQuery"
+              [ngModel]="searchQuery()"
+              (ngModelChange)="searchQuery.set($event)"
               placeholder="Buscar por placa, modelo o marca..."
               class="w-full h-10 pl-9 pr-3 bg-white institutional-border rounded-xl text-carbon text-body-sm focus:border-carbon focus:outline-none"
             />
           </div>
 
           <select
-            [(ngModel)]="selectedType"
+            [ngModel]="selectedType()"
+            (ngModelChange)="selectedType.set($event)"
             class="h-10 px-3 bg-white institutional-border rounded-xl text-carbon text-body-sm focus:border-carbon focus:outline-none"
           >
             <option value="ALL">Todos los Tipos</option>
@@ -64,7 +66,8 @@ import { createLoader, errMsg } from '@utils/util';
           </select>
 
           <select
-            [(ngModel)]="selectedStatus"
+            [ngModel]="selectedStatus()"
+            (ngModelChange)="selectedStatus.set($event)"
             class="h-10 px-3 bg-white institutional-border rounded-xl text-carbon text-body-sm focus:border-carbon focus:outline-none"
           >
             <option value="ALL">Todos los Estados</option>
@@ -94,7 +97,7 @@ import { createLoader, errMsg } from '@utils/util';
           [emptyIcon]="'no_crash'"
           [emptyTitle]="'Sin vehículos registrados'"
           [emptyText]="'No se encontraron vehículos o maquinaria que coincidan con la búsqueda.'"
-          [resettable]="searchQuery !== '' || selectedType !== 'ALL' || selectedStatus !== 'ALL'"
+          [resettable]="searchQuery() !== '' || selectedType() !== 'ALL' || selectedStatus() !== 'ALL'"
           (retry)="loader.reload()"
           (reset)="resetFilters()"
         >
@@ -341,9 +344,9 @@ export class AdminFleetComponent {
 
   readonly loader = createLoader<Vehicle[]>(() => this.api.getVehicles(), []);
 
-  searchQuery = '';
-  selectedType = 'ALL';
-  selectedStatus = 'ALL';
+  readonly searchQuery = signal<string>('');
+  readonly selectedType = signal<string>('ALL');
+  readonly selectedStatus = signal<string>('ALL');
 
   readonly pageAlert = signal<string | null>(null);
 
@@ -364,9 +367,9 @@ export class AdminFleetComponent {
 
   readonly filteredVehicles = computed(() => {
     let list = this.loader.data();
-    const query = this.searchQuery.trim().toLowerCase();
-    const typeFilter = this.selectedType;
-    const statusFilter = this.selectedStatus;
+    const query = this.searchQuery().trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const typeFilter = this.selectedType();
+    const statusFilter = this.selectedStatus();
 
     if (typeFilter !== 'ALL') {
       list = list.filter((v) => vehicleType(v).toLowerCase() === typeFilter.toLowerCase());
@@ -380,12 +383,12 @@ export class AdminFleetComponent {
     }
 
     if (query) {
-      list = list.filter(
-        (v) =>
-          v.plate.toLowerCase().includes(query) ||
-          v.model.toLowerCase().includes(query) ||
-          v.brand.toLowerCase().includes(query)
-      );
+      list = list.filter((v) => {
+        const p = (v.plate || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const m = (v.model || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const b = (v.brand || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        return p.includes(query) || m.includes(query) || b.includes(query);
+      });
     }
 
     return list;
@@ -404,9 +407,9 @@ export class AdminFleetComponent {
   }
 
   resetFilters(): void {
-    this.searchQuery = '';
-    this.selectedType = 'ALL';
-    this.selectedStatus = 'ALL';
+    this.searchQuery.set('');
+    this.selectedType.set('ALL');
+    this.selectedStatus.set('ALL');
   }
 
   openCreateModal(): void {

@@ -6,6 +6,7 @@ import { PageHeaderComponent } from '@components/page-header.component';
 import { TableStateComponent } from '@components/table-state.component';
 import { Product, ProductInput } from '@models/models';
 import { ApiService } from '@services/api.service';
+import { StockAlertsService } from '@services/stock-alerts.service';
 import { categoryOf, cop } from '@utils/catalog';
 import { stockBadge } from '@utils/admin';
 import { createLoader, errMsg, saveBlob } from '@utils/util';
@@ -57,48 +58,67 @@ import { createLoader, errMsg, saveBlob } from '@utils/util';
       <app-alert [text]="pageAlert()" />
 
       <!-- Filters Row -->
-      <div class="bg-white institutional-border rounded-xl p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-sm">
+      <div class="bg-white institutional-border rounded-xl p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3 shadow-sm">
         <div class="flex flex-wrap items-center gap-3 flex-1">
-          <div class="relative min-w-[260px] flex-1">
-            <span class="material-symbols-outlined absolute left-3 top-2.5 text-secondary-label text-[20px]">
+          <!-- Campo de búsqueda rediseñado -->
+          <div class="relative w-full sm:w-auto min-w-[280px] flex-1">
+            <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-secondary-label text-[20px] pointer-events-none">
               search
             </span>
             <input
               type="text"
-              [(ngModel)]="searchQuery"
-              placeholder="Buscar por SKU, nombre o marca..."
-              class="w-full h-10 pl-9 pr-3 bg-white institutional-border rounded-xl text-carbon text-body-sm focus:border-carbon focus:outline-none"
+              [ngModel]="searchQuery()"
+              (ngModelChange)="onSearchChange($event)"
+              placeholder="Buscar por SKU, nombre, marca o categoría..."
+              class="w-full h-11 pl-11 pr-10 bg-white border border-[#DEDCD8] rounded-xl text-carbon text-body-sm focus:border-[#FDDA24] focus:ring-1 focus:ring-[#FDDA24] focus:outline-none transition-all placeholder:text-secondary-label/70"
             />
+            @if (searchQuery()) {
+              <button
+                type="button"
+                (click)="clearSearch()"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-secondary-label hover:text-carbon p-1 rounded-full flex items-center justify-center transition-colors"
+                title="Limpiar búsqueda"
+                aria-label="Limpiar búsqueda"
+              >
+                <span class="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            }
           </div>
 
           <select
-            [(ngModel)]="selectedCategory"
-            class="h-10 px-3 bg-white institutional-border rounded-xl text-carbon text-body-sm focus:border-carbon focus:outline-none"
+            [ngModel]="selectedCategory()"
+            (ngModelChange)="selectedCategory.set($event)"
+            class="h-11 px-3.5 bg-white border border-[#DEDCD8] rounded-xl text-carbon text-body-sm focus:border-[#FDDA24] focus:ring-1 focus:ring-[#FDDA24] focus:outline-none transition-all w-full sm:w-auto"
           >
             <option value="ALL">Todas las Categorías</option>
             <option value="CEM">Cementos y morteros</option>
-            <option value="ACE">Acero y hierro</option>
-            <option value="MAM">Mampostería</option>
-            <option value="AGR">Agregados</option>
+            <option value="AGR">Agregados (arena, grava)</option>
+            <option value="LAD">Ladrillos y bloques</option>
+            <option value="HIE">Hierro y acero</option>
             <option value="PIN">Pinturas</option>
+            <option value="HER">Herramientas</option>
+            <option value="ELE">Eléctricos</option>
+            <option value="PLO">Plomería</option>
             <option value="Otros">Otras categorías</option>
           </select>
 
           <select
-            [(ngModel)]="selectedStatus"
-            class="h-10 px-3 bg-white institutional-border rounded-xl text-carbon text-body-sm focus:border-carbon focus:outline-none"
+            [ngModel]="selectedStatus()"
+            (ngModelChange)="selectedStatus.set($event)"
+            class="h-11 px-3.5 bg-white border border-[#DEDCD8] rounded-xl text-carbon text-body-sm focus:border-[#FDDA24] focus:ring-1 focus:ring-[#FDDA24] focus:outline-none transition-all w-full sm:w-auto"
           >
             <option value="ALL">Todos los Estados</option>
-            <option value="Disponible">Disponible</option>
-            <option value="Pocas unidades">Pocas unidades</option>
-            <option value="Agotado">Agotado</option>
+            <option value="Disponible">Disponible (Stock normal)</option>
+            <option value="Stock bajo">Stock bajo (Mínimo o menos)</option>
+            <option value="Pocas unidades">Pocas unidades (1 al mínimo)</option>
+            <option value="Agotado">Agotado (0 unidades)</option>
           </select>
         </div>
 
         <button
           type="button"
           (click)="loader.reload()"
-          class="h-10 px-3 institutional-border rounded-xl font-body-sm text-secondary-label hover:text-carbon hover:bg-warm-surface flex items-center gap-1.5 self-end lg:self-auto transition-colors"
+          class="h-11 px-4 border border-[#DEDCD8] rounded-xl font-body-sm text-secondary-label hover:text-carbon hover:bg-warm-surface flex items-center gap-1.5 self-end lg:self-auto transition-colors"
           title="Recargar catálogo"
         >
           <span class="material-symbols-outlined text-[18px]">refresh</span>
@@ -115,7 +135,7 @@ import { createLoader, errMsg, saveBlob } from '@utils/util';
           [emptyIcon]="'inventory_2'"
           [emptyTitle]="'Sin materiales registrados'"
           [emptyText]="'No se encontraron materiales que coincidan con los criterios de búsqueda.'"
-          [resettable]="searchQuery !== '' || selectedCategory !== 'ALL' || selectedStatus !== 'ALL'"
+          [resettable]="searchQuery() !== '' || selectedCategory() !== 'ALL' || selectedStatus() !== 'ALL'"
           (retry)="loader.reload()"
           (reset)="resetFilters()"
         >
@@ -135,7 +155,7 @@ import { createLoader, errMsg, saveBlob } from '@utils/util';
               <tbody class="divide-y divide-[#DEDCD8] font-body-sm text-body-sm">
                 @for (prod of filteredProducts(); track prod.id) {
                   @let badge = getBadge(prod);
-                  @let cat = getCategory(prod.sku);
+                  @let cat = getCategory(prod.sku, prod.category);
 
                   <tr class="hover:bg-[#FDFBF7]">
                     <td class="py-3.5 px-6 font-semibold text-carbon font-mono">
@@ -233,19 +253,43 @@ import { createLoader, errMsg, saveBlob } from '@utils/util';
               </div>
             </div>
 
-            <div class="flex flex-col gap-1.5">
-              <label for="name" class="font-label-sm text-label-sm text-carbon font-medium">
-                Nombre del Material *
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                required
-                [(ngModel)]="formName"
-                placeholder="p.ej. Cemento Gris de Uso General 50 kg"
-                class="h-10 px-3 bg-white institutional-border rounded-xl text-carbon text-body-sm focus:border-carbon focus:outline-none"
-              />
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="flex flex-col gap-1.5">
+                <label for="name" class="font-label-sm text-label-sm text-carbon font-medium">
+                  Nombre del Material *
+                </label>
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  required
+                  [(ngModel)]="formName"
+                  placeholder="p.ej. Cemento Gris de Uso General 50 kg"
+                  class="h-10 px-3 bg-white institutional-border rounded-xl text-carbon text-body-sm focus:border-carbon focus:outline-none"
+                />
+              </div>
+
+              <div class="flex flex-col gap-1.5">
+                <label for="category" class="font-label-sm text-label-sm text-carbon font-medium">
+                  Categoría del Material *
+                </label>
+                <select
+                  id="category"
+                  name="category"
+                  [(ngModel)]="formCategory"
+                  class="h-10 px-3 bg-white institutional-border rounded-xl text-carbon text-body-sm focus:border-carbon focus:outline-none"
+                >
+                  <option value="Cementos y morteros">Cementos y morteros</option>
+                  <option value="Agregados (arena, grava)">Agregados (arena, grava)</option>
+                  <option value="Ladrillos y bloques">Ladrillos y bloques</option>
+                  <option value="Hierro y acero">Hierro y acero</option>
+                  <option value="Pinturas">Pinturas</option>
+                  <option value="Herramientas">Herramientas</option>
+                  <option value="Eléctricos">Eléctricos</option>
+                  <option value="Plomería">Plomería</option>
+                  <option value="General">General / Otros</option>
+                </select>
+              </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -329,12 +373,16 @@ import { createLoader, errMsg, saveBlob } from '@utils/util';
 })
 export class AdminMaterialsComponent {
   private readonly api = inject(ApiService);
+  readonly stockAlerts = inject(StockAlertsService);
 
   readonly loader = createLoader<Product[]>(() => this.api.getProducts(), []);
 
-  searchQuery = '';
-  selectedCategory = 'ALL';
-  selectedStatus = 'ALL';
+  readonly searchQuery = signal<string>('');
+  readonly debouncedSearch = signal<string>('');
+  readonly selectedCategory = signal<string>('ALL');
+  readonly selectedStatus = signal<string>('ALL');
+
+  private searchTimer: ReturnType<typeof setTimeout> | undefined;
 
   readonly pageAlert = signal<string | null>(null);
   readonly exportingPdf = signal<boolean>(false);
@@ -348,41 +396,79 @@ export class AdminMaterialsComponent {
   formSku = '';
   formBrand = '';
   formName = '';
+  formCategory = 'General';
   formPrice = 0;
   formStock = 0;
   formMinimumStock = 0;
 
+  onSearchChange(val: string): void {
+    this.searchQuery.set(val);
+    if (this.searchTimer) {
+      clearTimeout(this.searchTimer);
+    }
+    this.searchTimer = setTimeout(() => {
+      this.debouncedSearch.set(val);
+    }, 300);
+  }
+
   readonly filteredProducts = computed(() => {
     let list = this.loader.data();
-    const query = this.searchQuery.trim().toLowerCase();
-    const cat = this.selectedCategory;
-    const status = this.selectedStatus;
+    const query = this.debouncedSearch().trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const cat = this.selectedCategory();
+    const status = this.selectedStatus();
 
     if (cat !== 'ALL') {
       if (cat === 'Otros') {
         list = list.filter((p) => {
-          const pref = p.sku.substring(0, 3).toUpperCase();
-          return !['CEM', 'ACE', 'MAM', 'AGR', 'PIN'].includes(pref);
+          const info = categoryOf(p.sku, p.category);
+          return info.name === 'Otros';
         });
       } else {
-        list = list.filter((p) => p.sku.toUpperCase().startsWith(cat));
+        list = list.filter((p) => {
+          const pref = (p.sku || '').toUpperCase().substring(0, 3);
+          const info = categoryOf(p.sku, p.category);
+          if (cat === 'CEM') return pref === 'CEM' || info.name.toLowerCase().includes('cemento');
+          if (cat === 'AGR') return pref === 'AGR' || info.name.toLowerCase().includes('agregado');
+          if (cat === 'LAD') return pref === 'LAD' || pref === 'MAM' || info.name.toLowerCase().includes('ladrillo');
+          if (cat === 'HIE') return pref === 'HIE' || pref === 'ACE' || info.name.toLowerCase().includes('acero') || info.name.toLowerCase().includes('hierro');
+          if (cat === 'PIN') return pref === 'PIN' || info.name.toLowerCase().includes('pintura');
+          if (cat === 'HER') return pref === 'HER' || info.name.toLowerCase().includes('herramienta');
+          if (cat === 'ELE') return pref === 'ELE' || info.name.toLowerCase().includes('electrico');
+          if (cat === 'PLO') return pref === 'PLO' || info.name.toLowerCase().includes('plomeria');
+          return pref.startsWith(cat) || info.name.toLowerCase().includes(cat.toLowerCase());
+        });
       }
     }
 
     if (status !== 'ALL') {
       list = list.filter((p) => {
+        const st = status.toLowerCase();
+        if (st.includes('bajo')) {
+          return p.stock <= p.minimumStock;
+        }
+        if (st.includes('agotado')) {
+          return p.stock <= 0;
+        }
+        if (st.includes('pocas')) {
+          return p.stock > 0 && p.stock <= p.minimumStock;
+        }
+        if (st.includes('disponible')) {
+          return p.stock > p.minimumStock;
+        }
         const badge = stockBadge(p);
-        return badge.label.toLowerCase() === status.toLowerCase();
+        return badge.label.toLowerCase() === st;
       });
     }
 
     if (query) {
-      list = list.filter(
-        (p) =>
-          p.sku.toLowerCase().includes(query) ||
-          p.name.toLowerCase().includes(query) ||
-          p.brand.toLowerCase().includes(query)
-      );
+      list = list.filter((p) => {
+        const s = (p.sku || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const n = (p.name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const b = (p.brand || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const c = (p.category || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const catInfo = categoryOf(p.sku, p.category).name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        return s.includes(query) || n.includes(query) || b.includes(query) || c.includes(query) || catInfo.includes(query);
+      });
     }
 
     return list;
@@ -392,18 +478,26 @@ export class AdminMaterialsComponent {
     return stockBadge(p);
   }
 
-  getCategory(sku: string) {
-    return categoryOf(sku);
+  getCategory(sku: string, category?: string) {
+    return categoryOf(sku, category);
   }
 
   formatPrice(p: number) {
     return cop(p);
   }
 
+  clearSearch(): void {
+    this.searchQuery.set('');
+    this.debouncedSearch.set('');
+    if (this.searchTimer) {
+      clearTimeout(this.searchTimer);
+    }
+  }
+
   resetFilters(): void {
-    this.searchQuery = '';
-    this.selectedCategory = 'ALL';
-    this.selectedStatus = 'ALL';
+    this.clearSearch();
+    this.selectedCategory.set('ALL');
+    this.selectedStatus.set('ALL');
   }
 
   openCreateModal(): void {
@@ -411,6 +505,7 @@ export class AdminMaterialsComponent {
     this.formSku = '';
     this.formBrand = '';
     this.formName = '';
+    this.formCategory = 'Cementos y morteros';
     this.formPrice = 0;
     this.formStock = 0;
     this.formMinimumStock = 10;
@@ -423,6 +518,7 @@ export class AdminMaterialsComponent {
     this.formSku = p.sku;
     this.formBrand = p.brand;
     this.formName = p.name;
+    this.formCategory = p.category || categoryOf(p.sku).name || 'General';
     this.formPrice = p.unitPrice;
     this.formStock = p.stock;
     this.formMinimumStock = p.minimumStock;
@@ -444,6 +540,7 @@ export class AdminMaterialsComponent {
       sku: this.formSku.trim().toUpperCase(),
       brand: this.formBrand.trim(),
       name: this.formName.trim(),
+      category: this.formCategory || categoryOf(this.formSku).name || 'General',
       unitPrice: Number(this.formPrice),
       stock: Number(this.formStock),
       minimumStock: Number(this.formMinimumStock)
@@ -458,14 +555,19 @@ export class AdminMaterialsComponent {
       : this.api.createProduct(payload);
 
     req$.subscribe({
-      next: () => {
+      next: (res) => {
         this.savingModal.set(false);
         this.showModal.set(false);
         this.pageAlert.set(
           id
-            ? 'Material actualizado correctamente en la base de datos.'
-            : 'Nuevo material registrado exitosamente en el catálogo.'
+            ? `Material ${res.sku || this.formSku} actualizado correctamente.`
+            : `Nuevo material registrado exitosamente en el catálogo.`
         );
+
+        // 1. Refresca el store central para sincronizar Badge e Historial en vivo
+        this.stockAlerts.refresh();
+
+        // 2. Recarga la tabla de materiales manteniendo intactos los filtros actuales
         this.loader.reload();
       },
       error: (err) => {
@@ -486,6 +588,7 @@ export class AdminMaterialsComponent {
     this.api.deleteProduct(prod.id).subscribe({
       next: () => {
         this.pageAlert.set(`El material ${prod.sku} fue eliminado exitosamente.`);
+        this.stockAlerts.refresh();
         this.loader.reload();
       },
       error: (err) => {

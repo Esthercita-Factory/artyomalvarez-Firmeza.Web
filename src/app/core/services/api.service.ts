@@ -41,8 +41,35 @@ export class ApiService {
   }
 
   // --- Productos ---
-  getProducts(): Observable<Product[]> {
-    return this.list<Product>('Products');
+  getProducts(filters?: {
+    search?: string;
+    category?: string;
+    status?: string;
+    lowStock?: boolean;
+    onlyActive?: boolean;
+    page?: number;
+    pageSize?: number;
+  }): Observable<Product[]> {
+    let params: Record<string, string | number | boolean> | undefined;
+    if (filters) {
+      params = {};
+      if (filters.search && filters.search.trim() !== '') params['search'] = filters.search.trim();
+      if (filters.category && filters.category !== 'ALL') params['category'] = filters.category;
+      if (filters.status && filters.status !== 'ALL') params['status'] = filters.status;
+      if (filters.lowStock !== undefined) params['lowStock'] = filters.lowStock;
+      if (filters.onlyActive !== undefined) params['onlyActive'] = filters.onlyActive;
+      if (filters.page !== undefined && filters.page > 0) params['page'] = filters.page;
+      if (filters.pageSize !== undefined && filters.pageSize > 0) params['pageSize'] = filters.pageSize;
+    }
+    return this.list<Product>('Products', params);
+  }
+
+  getLowStock(): Observable<Product[]> {
+    return this.list<Product>('Products/low-stock');
+  }
+
+  getLowStockCount(): Observable<{ count: number }> {
+    return this.http.get<{ count: number }>(`${this.baseUrl}/Products/low-stock/count`);
   }
 
   createProduct(b: ProductInput): Observable<Product> {

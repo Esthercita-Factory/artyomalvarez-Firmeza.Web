@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AlertComponent } from '@components/alert.component';
 import { ApiService } from '@services/api.service';
 import { CartService } from '@services/cart.service';
+import { StockAlertsService } from '@services/stock-alerts.service';
 import { cop } from '@utils/catalog';
 import { errMsg } from '@utils/util';
 
@@ -222,6 +223,7 @@ import { errMsg } from '@utils/util';
 export class CartComponent {
   private readonly api = inject(ApiService);
   readonly cart = inject(CartService);
+  private readonly stockAlerts = inject(StockAlertsService);
   private readonly router = inject(Router);
 
   readonly submitting = signal<boolean>(false);
@@ -260,6 +262,7 @@ export class CartComponent {
         next: (sale) => {
           this.submitting.set(false);
           this.cart.clear();
+          this.stockAlerts.refresh();
           const ref = sale.saleNumber || `VEN-${sale.id.substring(0, 8).toUpperCase()}`;
           this.successMessage.set(
             `Su orden ha sido registrada exitosamente con el consecutivo ${ref}. Puede consultar el detalle en su historial de ventas.`

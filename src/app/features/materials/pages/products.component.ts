@@ -43,20 +43,31 @@ import { createLoader } from '@utils/util';
       </div>
 
       <!-- Filters Row: Search and Category Chips -->
-      <div class="bg-white border border-[#DEDCD8] rounded p-5 flex flex-col gap-4 shadow-sm">
+      <div class="bg-white border border-[#DEDCD8] rounded-xl p-5 flex flex-col gap-4 shadow-sm">
         <div class="flex flex-col sm:flex-row gap-4 items-center justify-between">
           <!-- Search input -->
           <div class="relative w-full sm:max-w-md">
-            <span class="material-symbols-outlined absolute left-3 top-2.5 text-secondary-label text-[20px]">
+            <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-secondary-label text-[20px] pointer-events-none">
               search
             </span>
             <input
               type="text"
-              [(ngModel)]="searchQuery"
-              (ngModelChange)="currentPage.set(1)"
-              placeholder="Buscar por SKU, nombre o marca..."
-              class="w-full h-10 pl-9 pr-3 bg-white border border-[#DEDCD8] rounded text-carbon text-body-sm focus:border-carbon focus:outline-none"
+              [ngModel]="searchQuery()"
+              (ngModelChange)="onSearchChange($event)"
+              placeholder="Buscar por SKU, nombre, marca o categoría..."
+              class="w-full h-11 pl-11 pr-10 bg-white border border-[#DEDCD8] rounded-xl text-carbon text-body-sm focus:border-[#FDDA24] focus:ring-1 focus:ring-[#FDDA24] focus:outline-none transition-all placeholder:text-secondary-label/70"
             />
+            @if (searchQuery()) {
+              <button
+                type="button"
+                (click)="clearSearch()"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-secondary-label hover:text-carbon p-1 rounded-full flex items-center justify-center transition-colors"
+                title="Limpiar búsqueda"
+                aria-label="Limpiar búsqueda"
+              >
+                <span class="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            }
           </div>
 
           <!-- Total count indicator -->
@@ -202,13 +213,36 @@ export class ProductsComponent {
 
   readonly loader = createLoader<Product[]>(() => this.api.getProducts(), []);
 
-  searchQuery = '';
+  readonly searchQuery = signal<string>('');
+  readonly debouncedSearch = signal<string>('');
+  private searchTimer: ReturnType<typeof setTimeout> | undefined;
+
   readonly selectedCategory = signal<string>('ALL');
   readonly currentPage = signal<number>(1);
   readonly pageSize = 6;
 
+  onSearchChange(val: string): void {
+    this.searchQuery.set(val);
+    if (this.searchTimer) {
+      clearTimeout(this.searchTimer);
+    }
+    this.searchTimer = setTimeout(() => {
+      this.debouncedSearch.set(val);
+      this.currentPage.set(1);
+    }, 300);
+  }
+
+  clearSearch(): void {
+    this.searchQuery.set('');
+    this.debouncedSearch.set('');
+    if (this.searchTimer) {
+      clearTimeout(this.searchTimer);
+    }
+    this.currentPage.set(1);
+  }
+
   readonly availableCategories = computed(() => {
-    const prods = this.loader.data();
+    const prods = this.loader.data() || [];
     const prefixes = new Set<string>();
     for (const p of prods) {
       if (p.sku && p.sku.length >= 3) {
@@ -222,21 +256,30 @@ export class ProductsComponent {
   });
 
   readonly filteredProducts = computed(() => {
-    let list = this.loader.data();
-    const query = this.searchQuery.trim().toLowerCase();
+    let list = this.loader.data() || [];
+    const query = (this.debouncedSearch() || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     const cat = this.selectedCategory();
 
     if (cat !== 'ALL') {
-      list = list.filter((p) => p.sku.toUpperCase().startsWith(cat));
+      list = list.filter((p) => {
+        const pref = (p.sku || '').toUpperCase().substring(0, 3);
+        const info = categoryOf(p.sku, p.category);
+        const catNorm = cat.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const infoNorm = info.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const pCatNorm = (p.category || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        return pref === cat || infoNorm.includes(catNorm) || pCatNorm.includes(catNorm);
+      });
     }
 
     if (query) {
-      list = list.filter(
-        (p) =>
-          p.sku.toLowerCase().includes(query) ||
-          p.name.toLowerCase().includes(query) ||
-          p.brand.toLowerCase().includes(query)
-      );
+      list = list.filter((p) => {
+        const s = (p.sku || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const n = (p.name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const b = (p.brand || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const c = (p.category || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const catInfo = categoryOf(p.sku, p.category).name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        return s.includes(query) || n.includes(query) || b.includes(query) || c.includes(query) || catInfo.includes(query);
+      });
     }
 
     return list;
@@ -275,7 +318,7 @@ export class ProductsComponent {
   }
 
   resetFilters(): void {
-    this.searchQuery = '';
+    this.clearSearch();
     this.selectedCategory.set('ALL');
     this.currentPage.set(1);
   }

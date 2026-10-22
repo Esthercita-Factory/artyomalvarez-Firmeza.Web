@@ -76,7 +76,7 @@ export class ProductCardComponent {
   readonly product = input.required<Product>();
   readonly add = output<Product>();
 
-  readonly categoryInfo = computed(() => categoryOf(this.product().sku));
+  readonly categoryInfo = computed(() => categoryOf(this.product().sku, this.product().category));
   readonly stateInfo = computed(() => stockState(this.product()));
   readonly formattedPrice = computed(() => cop(this.product().unitPrice));
 }

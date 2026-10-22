@@ -5,6 +5,7 @@ import { KpiCardComponent } from '@components/kpi-card.component';
 import { TableStateComponent } from '@components/table-state.component';
 import { Product, Rental, Sale, Vehicle } from '@models/models';
 import { ApiService } from '@services/api.service';
+import { StockAlertsService } from '@services/stock-alerts.service';
 import { cop } from '@utils/catalog';
 import { isRentalActive, stockBadge } from '@utils/admin';
 import { errMsg } from '@utils/util';
@@ -135,11 +136,11 @@ import { errMsg } from '@utils/util';
 })
 export class AdminDashboardComponent {
   private readonly api = inject(ApiService);
+  readonly stockAlerts = inject(StockAlertsService);
 
   readonly loading = signal<boolean>(true);
   readonly error = signal<string | null>(null);
 
-  readonly products = signal<Product[]>([]);
   readonly sales = signal<Sale[]>([]);
   readonly rentals = signal<Rental[]>([]);
   readonly vehicles = signal<Vehicle[]>([]);
@@ -148,7 +149,6 @@ export class AdminDashboardComponent {
     const salesList = this.sales();
     const rentalsList = this.rentals();
     const vehiclesList = this.vehicles();
-    const productsList = this.products();
 
     const now = new Date();
     const currentMonth = now.getMonth();
@@ -198,8 +198,8 @@ export class AdminDashboardComponent {
 
     const occupancyRate = totalVehicles > 0 ? Math.round((rentedVehicles / totalVehicles) * 100) : 0;
 
-    // Stock bajo
-    const lowStockCount = productsList.filter((p) => p.stock <= p.minimumStock).length;
+    // Stock bajo proveniente de la regla única de StockAlertsService
+    const lowStockCount = this.stockAlerts.lowStockCount();
 
     return {
       monthlySalesFormatted: cop(monthlySalesTotal),
@@ -212,9 +212,7 @@ export class AdminDashboardComponent {
   });
 
   readonly lowStockProducts = computed(() => {
-    return this.products()
-      .filter((p) => p.stock <= p.minimumStock)
-      .sort((a, b) => a.stock - b.stock);
+    return this.stockAlerts.lowStockItems();
   });
 
   constructor() {
@@ -224,15 +222,14 @@ export class AdminDashboardComponent {
   loadData(): void {
     this.loading.set(true);
     this.error.set(null);
+    this.stockAlerts.refresh();
 
     forkJoin({
-      products: this.api.getProducts(),
       sales: this.api.getSales(),
       rentals: this.api.getRentals(),
       vehicles: this.api.getVehicles()
     }).subscribe({
       next: (res) => {
-        this.products.set(res.products);
         this.sales.set(res.sales);
         this.rentals.set(res.rentals);
         this.vehicles.set(res.vehicles);

@@ -49,7 +49,8 @@ import { createLoader } from '@utils/util';
           </span>
           <input
             type="text"
-            [(ngModel)]="searchQuery"
+            [ngModel]="searchQuery()"
+            (ngModelChange)="searchQuery.set($event)"
             placeholder="Buscar por placa, modelo o marca..."
             class="w-full h-10 pl-9 pr-3 bg-white border border-[#DEDCD8] rounded text-carbon text-body-sm focus:border-carbon focus:outline-none"
           />
@@ -57,7 +58,8 @@ import { createLoader } from '@utils/util';
 
         <div class="flex items-center gap-3 w-full sm:w-auto">
           <select
-            [(ngModel)]="selectedType"
+            [ngModel]="selectedType()"
+            (ngModelChange)="selectedType.set($event)"
             class="h-10 px-3 bg-white border border-[#DEDCD8] rounded text-carbon text-body-sm focus:border-carbon focus:outline-none w-full sm:w-auto"
           >
             <option value="ALL">Todos los tipos</option>
@@ -188,25 +190,25 @@ export class VehiclesComponent {
 
   readonly loader = createLoader<Vehicle[]>(() => this.api.getVehicles(), []);
 
-  searchQuery = '';
-  selectedType = 'ALL';
+  readonly searchQuery = signal<string>('');
+  readonly selectedType = signal<string>('ALL');
 
   readonly filteredVehicles = computed(() => {
     let list = this.loader.data();
-    const query = this.searchQuery.trim().toLowerCase();
-    const typeFilter = this.selectedType;
+    const query = this.searchQuery().trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const typeFilter = this.selectedType();
 
     if (typeFilter !== 'ALL') {
       list = list.filter((v) => vehicleType(v).toLowerCase() === typeFilter.toLowerCase());
     }
 
     if (query) {
-      list = list.filter(
-        (v) =>
-          v.plate.toLowerCase().includes(query) ||
-          v.model.toLowerCase().includes(query) ||
-          v.brand.toLowerCase().includes(query)
-      );
+      list = list.filter((v) => {
+        const p = (v.plate || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const m = (v.model || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const b = (v.brand || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        return p.includes(query) || m.includes(query) || b.includes(query);
+      });
     }
 
     return list;
@@ -232,7 +234,7 @@ export class VehiclesComponent {
   }
 
   resetFilters(): void {
-    this.searchQuery = '';
-    this.selectedType = 'ALL';
+    this.searchQuery.set('');
+    this.selectedType.set('ALL');
   }
 }
